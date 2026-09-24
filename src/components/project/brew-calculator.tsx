@@ -1,6 +1,6 @@
 'use client';
 
-import { useId, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import { brewMethods, type BrewMethod } from '@/data/brew-methods';
 
 export function BrewCalculator() {
@@ -15,6 +15,7 @@ export function BrewCalculator() {
   const [volumeMl, setVolumeMl] = useState<number>(selectedMethod.defaultMl);
 
   const inputId = useId();
+  const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   const handleSelectMethod = (method: BrewMethod) => {
     setSelectedMethodId(method.id);
@@ -24,10 +25,36 @@ export function BrewCalculator() {
     }
   };
 
+  const handleTabKeyDown = (
+    index: number,
+    e: React.KeyboardEvent<HTMLButtonElement>,
+  ) => {
+    let nextIndex = index;
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      nextIndex = (index + 1) % brewMethods.length;
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      nextIndex = (index - 1 + brewMethods.length) % brewMethods.length;
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      nextIndex = 0;
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      nextIndex = brewMethods.length - 1;
+    } else {
+      return;
+    }
+
+    const nextMethod = brewMethods[nextIndex];
+    handleSelectMethod(nextMethod);
+    tabRefs.current[nextIndex]?.focus();
+  };
+
   // Live calculation: coffee amount in grams (1 decimal precision)
   const coffeeGrams = (volumeMl / selectedMethod.ratio).toFixed(1);
 
-  // Quick preset sizes suited to the current method range
+  // Quick preset sizes strictly matching method range and physical capacities
   const getPresets = (method: BrewMethod) => {
     if (method.id === 'aeropress') {
       return [
@@ -43,10 +70,26 @@ export function BrewCalculator() {
         { label: 'Groß (250 ml)', ml: 250 },
       ];
     }
+    if (method.id === 'chemex') {
+      return [
+        { label: 'Klein (350 ml)', ml: 350 },
+        { label: '2 Tassen (500 ml)', ml: 500 },
+        { label: 'Karaffe (750 ml)', ml: 750 },
+      ];
+    }
+    if (method.id === 'v60') {
+      const potMl = Math.min(600, method.maxMl);
+      return [
+        { label: '1 Tasse (250 ml)', ml: 250 },
+        { label: '2 Tassen (500 ml)', ml: 500 },
+        { label: `Kanne (${potMl} ml)`, ml: potMl },
+      ];
+    }
+    const potMl = Math.min(750, method.maxMl);
     return [
       { label: '1 Tasse (250 ml)', ml: 250 },
       { label: '2 Tassen (500 ml)', ml: 500 },
-      { label: 'Kanne (750 ml)', ml: Math.min(750, method.maxMl) },
+      { label: `Kanne (${potMl} ml)`, ml: potMl },
     ];
   };
 
@@ -54,7 +97,7 @@ export function BrewCalculator() {
 
   return (
     <div className="space-y-12">
-      {/* Method Selection Tabs */}
+      {/* Method Selection Tabs with WAI-ARIA roving tabindex & keyboard support */}
       <div>
         <label
           id={`${inputId}-method-label`}
@@ -67,17 +110,22 @@ export function BrewCalculator() {
           aria-labelledby={`${inputId}-method-label`}
           className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5"
         >
-          {brewMethods.map((method) => {
+          {brewMethods.map((method, index) => {
             const isSelected = method.id === selectedMethodId;
             return (
               <button
                 key={method.id}
+                ref={(el) => {
+                  tabRefs.current[index] = el;
+                }}
                 role="tab"
                 id={`tab-${method.id}`}
                 aria-selected={isSelected}
                 aria-controls={`panel-${method.id}`}
+                tabIndex={isSelected ? 0 : -1}
                 onClick={() => handleSelectMethod(method)}
-                className={`py-3.5 px-3 rounded-lg border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between ${
+                onKeyDown={(e) => handleTabKeyDown(index, e)}
+                className={`py-3.5 px-3 rounded-lg border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-terracotta)] ${
                   isSelected
                     ? 'bg-[var(--color-espresso)] text-[var(--color-paper)] border-[var(--color-espresso)] shadow-sm'
                     : 'bg-white text-[var(--color-espresso)] border-[var(--color-espresso)]/15 hover:border-[var(--color-espresso)]/40 hover:bg-[var(--color-surface)]'
@@ -130,7 +178,7 @@ export function BrewCalculator() {
                 htmlFor={`${inputId}-volume-slider`}
                 className="text-xs uppercase tracking-widest font-mono text-[var(--color-espresso)]/70 font-semibold"
               >
-                2. Gewünschte Kaffeemenge
+                2. Gewünschte Kaffeemenge (Brühwasser)
               </label>
               <span className="font-mono font-bold text-lg text-[var(--accent-terracotta)]">
                 {volumeMl} ml
@@ -150,13 +198,18 @@ export function BrewCalculator() {
               aria-valuemin={selectedMethod.minMl}
               aria-valuemax={selectedMethod.maxMl}
               aria-valuenow={volumeMl}
-              aria-label={`Flüssigkeitsmenge für ${selectedMethod.name}`}
-              className="w-full h-2 bg-[var(--color-surface)] rounded-lg appearance-none cursor-pointer accent-[var(--accent-terracotta)] border border-[var(--color-espresso)]/15"
+              aria-label={`Brühwassermenge für ${selectedMethod.name}`}
+              className="w-full h-2 bg-[var(--color-surface)] rounded-lg appearance-none cursor-pointer accent-[var(--accent-terracotta)] border border-[var(--color-espresso)]/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-terracotta)]"
             />
             <div className="flex justify-between text-[11px] font-mono text-[#5E554D] mt-1">
               <span>{selectedMethod.minMl} ml</span>
               <span>{selectedMethod.maxMl} ml</span>
             </div>
+            <p className="text-[11px] text-[#5E554D] mt-2 font-sans leading-normal">
+              Hinweis: Berechnet nach gesamter Brühwassereinwaage. Das
+              Kaffeemehl bindet ca. das 2-Fache seines Gewichts an Wasser, die
+              Trinkmenge in der Tasse liegt entsprechend leicht darunter.
+            </p>
           </div>
 
           {/* Quick Presets */}
@@ -170,7 +223,7 @@ export function BrewCalculator() {
                   key={preset.label}
                   type="button"
                   onClick={() => setVolumeMl(preset.ml)}
-                  className={`px-3 py-1.5 rounded-md text-xs font-mono transition-colors cursor-pointer border ${
+                  className={`px-3 py-1.5 rounded-md text-xs font-mono transition-colors cursor-pointer border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-terracotta)] ${
                     volumeMl === preset.ml
                       ? 'bg-[var(--accent-terracotta)] text-white border-[var(--accent-terracotta)]'
                       : 'bg-[var(--color-surface)] text-[var(--color-espresso)]/80 border-[var(--color-espresso)]/15 hover:border-[var(--color-espresso)]/40 hover:bg-white'
@@ -202,7 +255,7 @@ export function BrewCalculator() {
             <div className="grid grid-cols-2 gap-4 mb-6">
               <div className="bg-white/5 p-4 rounded-xl border border-white/10">
                 <span className="block text-xs font-mono text-white/60 mb-1">
-                  Kaffeemehl (frisch gemahlen)
+                  Kaffeemehl (Einwaage)
                 </span>
                 <span className="text-3xl sm:text-4xl font-mono font-bold text-[var(--accent-amber)]">
                   {coffeeGrams} g
@@ -210,7 +263,7 @@ export function BrewCalculator() {
               </div>
               <div className="bg-white/5 p-4 rounded-xl border border-white/10">
                 <span className="block text-xs font-mono text-white/60 mb-1">
-                  Wassermenge (gesamt)
+                  Wassermenge (Brühwasser)
                 </span>
                 <span className="text-3xl sm:text-4xl font-mono font-bold text-white">
                   {volumeMl} ml
@@ -254,8 +307,8 @@ export function BrewCalculator() {
             {/* Screenreader live announcement */}
             <div className="sr-only" aria-live="polite" aria-atomic="true">
               Rezept für {selectedMethod.name}: {coffeeGrams} Gramm Kaffeemehl
-              auf {volumeMl} Milliliter Wasser bei {selectedMethod.tempC} Grad
-              Celsius und Mahlgrad {selectedMethod.grindSize}.
+              auf {volumeMl} Milliliter Brühwasser bei {selectedMethod.tempC}{' '}
+              Grad Celsius und Mahlgrad {selectedMethod.grindSize}.
             </div>
           </div>
         </div>

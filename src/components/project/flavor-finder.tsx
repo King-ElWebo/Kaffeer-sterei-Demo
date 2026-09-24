@@ -1,6 +1,6 @@
 'use client';
 
-import { useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -11,6 +11,98 @@ type MethodOption = 'espresso' | 'filter' | 'french-press' | 'allround';
 type FlavorOption = 'chocolate' | 'fruit' | 'balance' | 'decaf';
 type RoastOption = 'light' | 'medium' | 'medium-dark';
 
+interface Step1OptionItem {
+  id: MethodOption;
+  title: string;
+  desc: string;
+  tag: string;
+}
+
+interface Step2OptionItem {
+  id: FlavorOption;
+  title: string;
+  desc: string;
+  color: string;
+}
+
+interface Step3OptionItem {
+  id: RoastOption;
+  title: string;
+  desc: string;
+}
+
+const STEP1_OPTIONS: readonly Step1OptionItem[] = [
+  {
+    id: 'espresso',
+    title: 'Espresso & Siebträger',
+    desc: 'Hoher Brühdruck, dichte Crema, samtiger Körper und pure Intensität.',
+    tag: 'Bialetti / Siebträger',
+  },
+  {
+    id: 'filter',
+    title: 'Handfilter (V60 / Chemex)',
+    desc: 'Schwerkraft-Extraktion für maximale Klarheit und feine florale Nuancen.',
+    tag: 'Tropf- & Pour-Over',
+  },
+  {
+    id: 'french-press',
+    title: 'French Press (Stempelkanne)',
+    desc: 'Direkter Wasserkontakt für tiefe Süße, Fülle und kräftige Öle.',
+    tag: 'Immersion',
+  },
+  {
+    id: 'allround',
+    title: 'Allrounder & Vollautomat',
+    desc: 'Zuverlässig, unkompliziert, ausgewogen und magenfreundlich.',
+    tag: 'Alltag & Büro',
+  },
+] as const;
+
+const STEP2_OPTIONS: readonly Step2OptionItem[] = [
+  {
+    id: 'chocolate',
+    title: 'Schokolade & Nuss',
+    desc: 'Dunkler Kakao, geröstete Mandeln, dichter Körper und dezente Säure.',
+    color: '#A6361F',
+  },
+  {
+    id: 'fruit',
+    title: 'Fruchtig & Floral',
+    desc: 'Spritzige Bergamotte, Jasminblüten, Pfirsich und helle Eleganz.',
+    color: '#E89C33',
+  },
+  {
+    id: 'balance',
+    title: 'Ausgewogen & Honigsüß',
+    desc: 'Roter Apfel, milder Waldhonig, nussig und wunderbar harmonisch.',
+    color: '#2F7466',
+  },
+  {
+    id: 'decaf',
+    title: 'Sanft & Entkoffeiniert',
+    desc: 'Feige und Kakao ohne Koffein – ideal für späten Kaffeegenuss.',
+    color: '#3B4B70',
+  },
+] as const;
+
+const STEP3_OPTIONS: readonly Step3OptionItem[] = [
+  {
+    id: 'light',
+    title: 'Hell & Spritzig',
+    desc: 'Maximaler Erhalt der Bohnen-Herkunftsaromen, belebend, tee-artig.',
+  },
+  {
+    id: 'medium',
+    title: 'Ausgewogenes Medium',
+    desc: 'Gleichklang aus Süße, Körper und sanfter Säure. Der Allrounder.',
+  },
+  {
+    id: 'medium-dark',
+    title: 'Kräftig & Dunkel',
+    desc: 'Betonte Röstaromen, Kakao, Mandel und sehr geringe Fruchtsäure.',
+  },
+] as const;
+
 export function FlavorFinder() {
   const [step, setStep] = useState<number>(1);
   const [method, setMethod] = useState<MethodOption>('filter');
@@ -18,32 +110,67 @@ export function FlavorFinder() {
   const [roast, setRoast] = useState<RoastOption>('medium');
 
   const baseId = useId();
+  const stepHeadingRef = useRef<HTMLHeadingElement | null>(null);
 
-  // Deterministic matching logic based on the 4 real coffees
+  const step1Refs = useRef<(HTMLButtonElement | null)[]>([]);
+  const step2Refs = useRef<(HTMLButtonElement | null)[]>([]);
+  const step3Refs = useRef<(HTMLButtonElement | null)[]>([]);
+
+  // Focus the step heading on transition so keyboard and screen-reader users land logically
+  useEffect(() => {
+    stepHeadingRef.current?.focus();
+  }, [step]);
+
+  // Deterministic matching logic with honest specialty coffee rationales and trade-offs (no fake percentages)
   const matchedCoffee: {
     coffee: CoffeeProduct;
-    score: number;
+    badge: string;
     reason: string;
+    tradeOff?: string;
   } = (() => {
     // 1. Decaf priority
     if (flavor === 'decaf') {
       const coffee = coffeeProducts.find((p) => p.slug === 'nachtfalter')!;
+      let tradeOff: string | undefined;
+      if (roast === 'light') {
+        tradeOff =
+          'Hinweis zum Röstgrad: Obwohl du helle Röstungen bevorzugst, rösten wir den Nachtfalter als ausgewogenes Medium. Das stabilisiert den Körper der naturbelassen entkoffeinierten Bohne und verhindert unangenehm adstringierende Säurespitzen.';
+      } else if (method === 'espresso') {
+        tradeOff =
+          'Zubereitungstipp: Durch den mittleren Röstgrad und die feine Kakaobasis erzeugt der Nachtfalter im Siebträger eine dichte, haselnussbraune Crema – perfekt als abendlicher Espresso.';
+      } else if (method === 'filter') {
+        tradeOff =
+          'Zubereitungstipp: Im Handfilter entfaltet der Nachtfalter eine bemerkenswert saubere Feigensüße mit milder, weicher Säure.';
+      }
       return {
         coffee,
-        score: 98,
+        badge: 'Koffeinfreie Spezialität',
         reason:
-          'Du suchst volles Kaffeearoma ohne Koffein-Aufregung. Unser „Nachtfalter“ wird mit natürlichem Zuckerrohrverfahren entkoffeiniert und besticht durch reiche Noten von süßer Feige und Kakao.',
+          'Du suchst aromatische Tiefe ohne Koffein-Aufregung. Unser „Nachtfalter“ beweist, dass Specialty Coffee und Entkoffeinierung perfekt zusammenpassen. Durch das sanfte, rein biologische Zuckerrohr-Verfahren bleiben feine Noten von Feige und herbem Kakao vollständig erhalten.',
+        tradeOff,
       };
     }
 
-    // 2. Light / Fruit priority
+    // 2. Light roast or Fruit/Floral flavor preference
     if (flavor === 'fruit' || roast === 'light') {
       const coffee = coffeeProducts.find((p) => p.slug === 'flora-neubau')!;
+      let tradeOff: string | undefined;
+      if (method === 'espresso') {
+        tradeOff =
+          'Sensorischer Hinweis zu Espresso: Helle äthiopische Röstungen ergeben im Siebträger einen modernen, lebendigen Frucht-Espresso („Modern Espresso“) mit ausgeprägter Zitrussäure. Wir empfehlen eine feine Mahlung, ca. 94 °C Brühtemperatur und eine Extraktionszeit von 28–30 Sekunden.';
+      } else if (flavor === 'chocolate') {
+        tradeOff =
+          'Sensorischer Kompromiss: Du hast Schokolade gewählt, aber eine helle Röstung präferiert. Bei Flora Neubau stehen Bergamotte und Pfirsich im Vordergrund; Kakaonoten treten hier nur sehr dezent im Nachklang auf.';
+      } else if (method === 'french-press') {
+        tradeOff =
+          'Zubereitungstipp: In der French Press empfehlen wir ein etwas gröberes Mahlgut und 4 Minuten Ziehzeit, um die Klarheit der floralen Aromen trotz ungefilterter Öle bestmöglich herauszuarbeiten.';
+      }
       return {
         coffee,
-        score: method === 'filter' ? 99 : 92,
+        badge: 'Florale Frische & Helle Röstung',
         reason:
-          'Für deine Vorliebe für fruchtige Frische und helle Röstungen ist „Flora Neubau“ ideal. Die äthiopischen Hochlandbohnen entfalten im Handfilter elegante Jasmin- und Bergamottnoten.',
+          'Für deine Vorliebe für helle Röstungen und fruchtig-florale Eleganz ist „Flora Neubau“ ideal. Die sortenreinen äthiopischen Hochlandbohnen aus Yirgacheffe begeistern im Aufguss mit lebendigen Bergamottenoten, weißem Pfirsich und feinem Jasminduft.',
+        tradeOff,
       };
     }
 
@@ -54,11 +181,20 @@ export function FlavorFinder() {
       roast === 'medium-dark'
     ) {
       const coffee = coffeeProducts.find((p) => p.slug === 'wiener-samt')!;
+      let tradeOff: string | undefined;
+      if (method === 'filter') {
+        tradeOff =
+          'Sensorischer Hinweis zum Handfilter: Du brühst bevorzugt im Filter. Wiener Samt liefert hier eine wunderbar säurearme, samtige Tasse mit vollem Schokoladenkörper – ideal, wenn du fruchtbetonte Säuren meiden möchtest.';
+      } else if (flavor === 'balance') {
+        tradeOff =
+          'Sensorische Einordnung: Du hast ein ausgewogenes Geschmackserlebnis gewünscht. Wiener Samt liefert dafür eine sehr verlässliche, harmonische Basis mit Fokus auf Schokolade, geröstete Mandel und minimale Fruchtsäure.';
+      }
       return {
         coffee,
-        score: method === 'espresso' ? 98 : 94,
+        badge: 'Samtiger Körper & Schokolade',
         reason:
-          'Deine Vorliebe für dichte Crema, samtigen Körper und Schokolade führt direkt zu „Wiener Samt“. Schonend mittel-dunkel geröstet, begeistert dieser Espresso pur oder im Cappuccino.',
+          'Deine Vorliebe für warme Kakaonoten, dichte Textur und schonende Röstung führt direkt zu „Wiener Samt“. Unser mitteldunkler Signature-Roast baut Fruchtsäuren harmonisch ab und maximiert Noten von Zartbitterschokolade und gebrannter Mandel.',
+        tradeOff,
       };
     }
 
@@ -66,9 +202,11 @@ export function FlavorFinder() {
     const coffee = coffeeProducts.find((p) => p.slug === 'donau-klarheit')!;
     return {
       coffee,
-      score: 96,
+      badge: 'Ausgewogene Harmonie & Süße',
       reason:
-        'Du schätzt eine harmonische Balance aus Süße und milder Frucht ohne extreme Säurespitzen. „Donau Klarheit“ vereint Aromen von rotem Apfel, Waldhonig und gerösteter Haselnuss für jeden Tag.',
+        'Du schätzt eine harmonische Mitte aus Süße, mildem Fruchtansatz und vertrautem Nussaroma ohne extreme Säurespitzen. „Donau Klarheit“ balanciert roten Apfel, Waldhonig und Haselnuss perfekt aus.',
+      tradeOff:
+        'Universalität: Ob Handfilter, French Press oder Vollautomat – dieser kolumbianische Single Origin extrahiert extrem fehlertolerant und schmeckt zu jeder Tageszeit.',
     };
   })();
 
@@ -79,13 +217,86 @@ export function FlavorFinder() {
     setRoast('medium');
   };
 
+  // Keyboard navigation for radio groups
+  const handleStep1KeyDown = (
+    index: number,
+    e: React.KeyboardEvent<HTMLButtonElement>,
+  ) => {
+    let nextIndex = index;
+    if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+      e.preventDefault();
+      nextIndex = (index + 1) % STEP1_OPTIONS.length;
+    } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+      e.preventDefault();
+      nextIndex = (index - 1 + STEP1_OPTIONS.length) % STEP1_OPTIONS.length;
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      nextIndex = 0;
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      nextIndex = STEP1_OPTIONS.length - 1;
+    } else {
+      return;
+    }
+    setMethod(STEP1_OPTIONS[nextIndex].id);
+    step1Refs.current[nextIndex]?.focus();
+  };
+
+  const handleStep2KeyDown = (
+    index: number,
+    e: React.KeyboardEvent<HTMLButtonElement>,
+  ) => {
+    let nextIndex = index;
+    if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+      e.preventDefault();
+      nextIndex = (index + 1) % STEP2_OPTIONS.length;
+    } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+      e.preventDefault();
+      nextIndex = (index - 1 + STEP2_OPTIONS.length) % STEP2_OPTIONS.length;
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      nextIndex = 0;
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      nextIndex = STEP2_OPTIONS.length - 1;
+    } else {
+      return;
+    }
+    setFlavor(STEP2_OPTIONS[nextIndex].id);
+    step2Refs.current[nextIndex]?.focus();
+  };
+
+  const handleStep3KeyDown = (
+    index: number,
+    e: React.KeyboardEvent<HTMLButtonElement>,
+  ) => {
+    let nextIndex = index;
+    if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+      e.preventDefault();
+      nextIndex = (index + 1) % STEP3_OPTIONS.length;
+    } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+      e.preventDefault();
+      nextIndex = (index - 1 + STEP3_OPTIONS.length) % STEP3_OPTIONS.length;
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      nextIndex = 0;
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      nextIndex = STEP3_OPTIONS.length - 1;
+    } else {
+      return;
+    }
+    setRoast(STEP3_OPTIONS[nextIndex].id);
+    step3Refs.current[nextIndex]?.focus();
+  };
+
   return (
     <div className="mx-auto max-w-4xl">
-      {/* Progress Indicator */}
+      {/* Progress Indicator: Clean 3-step progress bar without contradictory Step 4 */}
       <div className="mb-10">
         <div className="flex items-center justify-between text-xs font-mono text-[#5E554D] mb-2">
           <span>
-            {step <= 3 ? `Schritt ${step} von 3` : 'Dein persönliches Ergebnis'}
+            {step <= 3 ? `Frage ${step} von 3` : 'Empfehlung fertiggestellt'}
           </span>
           <span>
             {step <= 3
@@ -96,10 +307,14 @@ export function FlavorFinder() {
         <div
           className="h-2 w-full overflow-hidden rounded-full bg-[#E2DDD4]"
           role="progressbar"
-          aria-valuenow={step}
+          aria-valuenow={Math.min(step, 3)}
           aria-valuemin={1}
-          aria-valuemax={4}
-          aria-label={`Finder-Fortschritt: Schritt ${step} von 3`}
+          aria-valuemax={3}
+          aria-label={
+            step <= 3
+              ? `Finder-Fortschritt: Frage ${step} von 3`
+              : 'Finder-Fortschritt: Empfehlung fertiggestellt'
+          }
         >
           <div
             className="h-full bg-[#A6361F] transition-all duration-500 ease-out"
@@ -109,12 +324,13 @@ export function FlavorFinder() {
       </div>
 
       {/* Screen Reader Announcement Live Region */}
-      <div className="sr-only" aria-live="polite">
-        {step === 1 && 'Schritt 1: Wähle deine bevorzugte Brühmethode.'}
-        {step === 2 && 'Schritt 2: Wähle dein gewünschtes Geschmackserlebnis.'}
-        {step === 3 && 'Schritt 3: Wähle deinen bevorzugten Röstgrad.'}
+      <div className="sr-only" aria-live="polite" aria-atomic="true">
+        {step === 1 && 'Frage 1 von 3: Wähle deine bevorzugte Brühmethode.'}
+        {step === 2 &&
+          'Frage 2 von 3: Wähle dein gewünschtes Geschmackserlebnis.'}
+        {step === 3 && 'Frage 3 von 3: Wähle deinen bevorzugten Röstgrad.'}
         {step === 4 &&
-          `Ergebnis berechnet: Deine Empfehlung ist ${matchedCoffee.coffee.name}.`}
+          `Ergebnis: Deine persönliche Kaffee-Empfehlung ist ${matchedCoffee.coffee.name}.`}
       </div>
 
       {/* Step 1: Zubereitungsmethode */}
@@ -129,7 +345,9 @@ export function FlavorFinder() {
             </span>
             <h2
               id={`${baseId}-step1-title`}
-              className="font-serif text-3xl sm:text-4xl font-bold text-[#1C1613] mt-1"
+              ref={stepHeadingRef}
+              tabIndex={-1}
+              className="font-serif text-3xl sm:text-4xl font-bold text-[#1C1613] mt-1 focus:outline-none"
             >
               Wie bereitest du deinen Kaffee meistens zu?
             </h2>
@@ -144,41 +362,22 @@ export function FlavorFinder() {
             role="radiogroup"
             aria-label="Brühmethode auswählen"
           >
-            {[
-              {
-                id: 'espresso',
-                title: 'Espresso & Siebträger',
-                desc: 'Hoher Brühdruck, dichte Crema, samtiger Körper und pure Intensität.',
-                tag: 'Bialetti / Siebträger',
-              },
-              {
-                id: 'filter',
-                title: 'Handfilter (V60 / Chemex)',
-                desc: 'Schwerkraft-Extraktion für maximale Klarheit und feine florale Nuancen.',
-                tag: 'Tropf- & Pour-Over',
-              },
-              {
-                id: 'french-press',
-                title: 'French Press (Stempelkanne)',
-                desc: 'Direkter Wasserkontakt für tiefe Süße, Fülle und kräftige Öle.',
-                tag: 'Immersion',
-              },
-              {
-                id: 'allround',
-                title: 'Allrounder & Vollautomat',
-                desc: 'Zuverlässig, unkompliziert, ausgewogen und magenfreundlich.',
-                tag: 'Alltag & Büro',
-              },
-            ].map((opt) => {
+            {STEP1_OPTIONS.map((opt, index) => {
               const isSelected = method === opt.id;
               return (
                 <button
                   key={opt.id}
+                  ref={(el) => {
+                    step1Refs.current[index] = el;
+                  }}
                   type="button"
                   role="radio"
+                  id={`${baseId}-method-${opt.id}`}
                   aria-checked={isSelected}
-                  onClick={() => setMethod(opt.id as MethodOption)}
-                  className={`flex flex-col text-left p-6 rounded-2xl border transition-all active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A6361F] ${
+                  tabIndex={isSelected ? 0 : -1}
+                  onClick={() => setMethod(opt.id)}
+                  onKeyDown={(e) => handleStep1KeyDown(index, e)}
+                  className={`flex flex-col text-left p-6 rounded-2xl border transition-all active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A6361F] cursor-pointer ${
                     isSelected
                       ? 'border-[#A6361F] bg-[#FAF7F2] shadow-md ring-2 ring-[#A6361F]/20'
                       : 'border-[#E2DDD4] bg-[#FFFFFF] hover:border-[#A6361F]/50 hover:bg-[#FAF7F2]/50'
@@ -236,7 +435,9 @@ export function FlavorFinder() {
             </span>
             <h2
               id={`${baseId}-step2-title`}
-              className="font-serif text-3xl sm:text-4xl font-bold text-[#1C1613] mt-1"
+              ref={stepHeadingRef}
+              tabIndex={-1}
+              className="font-serif text-3xl sm:text-4xl font-bold text-[#1C1613] mt-1 focus:outline-none"
             >
               Welches Aromenerlebnis suchst du?
             </h2>
@@ -251,41 +452,22 @@ export function FlavorFinder() {
             role="radiogroup"
             aria-label="Geschmacksprofil auswählen"
           >
-            {[
-              {
-                id: 'chocolate',
-                title: 'Schokolade & Nuss',
-                desc: 'Dunkler Kakao, geröstete Mandeln, dichter Körper und dezente Säure.',
-                color: '#A6361F',
-              },
-              {
-                id: 'fruit',
-                title: 'Fruchtig & Floral',
-                desc: 'Spritzige Bergamotte, Jasminblüten, Pfirsich und helle Eleganz.',
-                color: '#E89C33',
-              },
-              {
-                id: 'balance',
-                title: 'Ausgewogen & Honigsüß',
-                desc: 'Roter Apfel, milder Waldhonig, nussig und wunderbar harmonisch.',
-                color: '#2F7466',
-              },
-              {
-                id: 'decaf',
-                title: 'Sanft & Entkoffeiniert',
-                desc: 'Feige und Kakao ohne Koffein – ideal für späten Kaffeegenuss.',
-                color: '#3B4B70',
-              },
-            ].map((opt) => {
+            {STEP2_OPTIONS.map((opt, index) => {
               const isSelected = flavor === opt.id;
               return (
                 <button
                   key={opt.id}
+                  ref={(el) => {
+                    step2Refs.current[index] = el;
+                  }}
                   type="button"
                   role="radio"
+                  id={`${baseId}-flavor-${opt.id}`}
                   aria-checked={isSelected}
-                  onClick={() => setFlavor(opt.id as FlavorOption)}
-                  className={`flex flex-col text-left p-6 rounded-2xl border transition-all active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A6361F] ${
+                  tabIndex={isSelected ? 0 : -1}
+                  onClick={() => setFlavor(opt.id)}
+                  onKeyDown={(e) => handleStep2KeyDown(index, e)}
+                  className={`flex flex-col text-left p-6 rounded-2xl border transition-all active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A6361F] cursor-pointer ${
                     isSelected
                       ? 'border-[#A6361F] bg-[#FAF7F2] shadow-md ring-2 ring-[#A6361F]/20'
                       : 'border-[#E2DDD4] bg-[#FFFFFF] hover:border-[#A6361F]/50 hover:bg-[#FAF7F2]/50'
@@ -313,7 +495,7 @@ export function FlavorFinder() {
             <button
               type="button"
               onClick={() => setStep(1)}
-              className="text-sm font-semibold text-[#5E554D] hover:text-[#1C1613]"
+              className="text-sm font-semibold text-[#5E554D] hover:text-[#1C1613] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A6361F] rounded p-1"
             >
               ← Zurück zu Frage 1
             </button>
@@ -341,7 +523,9 @@ export function FlavorFinder() {
             </span>
             <h2
               id={`${baseId}-step3-title`}
-              className="font-serif text-3xl sm:text-4xl font-bold text-[#1C1613] mt-1"
+              ref={stepHeadingRef}
+              tabIndex={-1}
+              className="font-serif text-3xl sm:text-4xl font-bold text-[#1C1613] mt-1 focus:outline-none"
             >
               Welchen Röstgrad bevorzugst du?
             </h2>
@@ -356,32 +540,22 @@ export function FlavorFinder() {
             role="radiogroup"
             aria-label="Röstgrad auswählen"
           >
-            {[
-              {
-                id: 'light',
-                title: 'Hell & Spritzig',
-                desc: 'Maximaler Erhalt der Bohnen-Herkunftsaromen, belebend, tee-artig.',
-              },
-              {
-                id: 'medium',
-                title: 'Ausgewogenes Medium',
-                desc: 'Gleichklang aus Süße, Körper und sanfter Säure. Der Allrounder.',
-              },
-              {
-                id: 'medium-dark',
-                title: 'Kräftig & Dunkel',
-                desc: 'Betonte Röstaromen, Kakao, Mandel und sehr geringe Fruchtsäure.',
-              },
-            ].map((opt) => {
+            {STEP3_OPTIONS.map((opt, index) => {
               const isSelected = roast === opt.id;
               return (
                 <button
                   key={opt.id}
+                  ref={(el) => {
+                    step3Refs.current[index] = el;
+                  }}
                   type="button"
                   role="radio"
+                  id={`${baseId}-roast-${opt.id}`}
                   aria-checked={isSelected}
-                  onClick={() => setRoast(opt.id as RoastOption)}
-                  className={`flex flex-col text-left p-6 rounded-2xl border transition-all active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A6361F] ${
+                  tabIndex={isSelected ? 0 : -1}
+                  onClick={() => setRoast(opt.id)}
+                  onKeyDown={(e) => handleStep3KeyDown(index, e)}
+                  className={`flex flex-col text-left p-6 rounded-2xl border transition-all active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A6361F] cursor-pointer ${
                     isSelected
                       ? 'border-[#A6361F] bg-[#FAF7F2] shadow-md ring-2 ring-[#A6361F]/20'
                       : 'border-[#E2DDD4] bg-[#FFFFFF] hover:border-[#A6361F]/50 hover:bg-[#FAF7F2]/50'
@@ -402,7 +576,7 @@ export function FlavorFinder() {
             <button
               type="button"
               onClick={() => setStep(2)}
-              className="text-sm font-semibold text-[#5E554D] hover:text-[#1C1613]"
+              className="text-sm font-semibold text-[#5E554D] hover:text-[#1C1613] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A6361F] rounded p-1"
             >
               ← Zurück zu Frage 2
             </button>
@@ -424,26 +598,28 @@ export function FlavorFinder() {
           aria-labelledby={`${baseId}-result-title`}
           className="rounded-3xl border border-[#E2DDD4] bg-[#FAF7F2] p-6 sm:p-10 lg:p-12 shadow-sm space-y-10"
         >
-          {/* Header Badge */}
+          {/* Header Badge without unsubstantiated percentages */}
           <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#E2DDD4] pb-6">
             <div>
               <span className="font-mono text-xs uppercase tracking-widest text-[#A6361F] font-semibold">
-                Dein persönlicher Match
+                Deine persönliche Empfehlung
               </span>
               <h2
                 id={`${baseId}-result-title`}
-                className="font-serif text-3xl sm:text-4xl font-bold text-[#1C1613] mt-1"
+                ref={stepHeadingRef}
+                tabIndex={-1}
+                className="font-serif text-3xl sm:text-4xl font-bold text-[#1C1613] mt-1 focus:outline-none"
               >
                 Wir empfehlen: „{matchedCoffee.coffee.name}“
               </h2>
             </div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#E2DDD4] bg-[#F3EFE6] px-4 py-2 font-mono text-xs font-bold text-[#1C1613]">
+            <div className="inline-flex items-center gap-2 rounded-full border border-[#E2DDD4] bg-[#F3EFE6] px-4 py-2 font-mono text-xs font-semibold text-[#1C1613]">
               <span
                 className="h-2 w-2 rounded-full"
                 style={{ backgroundColor: matchedCoffee.coffee.accentColor }}
                 aria-hidden="true"
               />
-              <span>{matchedCoffee.score}% Übereinstimmung</span>
+              <span>Sensorisch abgestimmt · {matchedCoffee.badge}</span>
             </div>
           </div>
 
@@ -467,15 +643,26 @@ export function FlavorFinder() {
               </div>
             </div>
 
-            {/* Explanation & Sensory Notes */}
+            {/* Explanation, Trade-Off & Sensory Notes */}
             <div className="lg:col-span-7 space-y-6">
-              <div className="rounded-2xl border border-[#E2DDD4] bg-[#FFFFFF] p-6 space-y-3">
-                <h3 className="font-serif text-lg font-bold text-[#1C1613]">
-                  Warum diese Bohne zu dir passt
-                </h3>
-                <p className="text-sm sm:text-base text-[#5E554D] leading-relaxed">
-                  {matchedCoffee.reason}
-                </p>
+              <div className="rounded-2xl border border-[#E2DDD4] bg-[#FFFFFF] p-6 space-y-4">
+                <div>
+                  <h3 className="font-serif text-lg font-bold text-[#1C1613]">
+                    Warum diese Bohne zu deinen Angaben passt
+                  </h3>
+                  <p className="text-sm sm:text-base text-[#5E554D] leading-relaxed mt-2">
+                    {matchedCoffee.reason}
+                  </p>
+                </div>
+
+                {matchedCoffee.tradeOff && (
+                  <div className="rounded-xl bg-[#FAF7F2] p-4 border border-[#E2DDD4]/80 text-xs sm:text-sm text-[#5E554D] leading-relaxed">
+                    <strong className="block font-semibold text-[#1C1613] mb-1">
+                      Sensorische Einordnung deiner Auswahl:
+                    </strong>
+                    {matchedCoffee.tradeOff}
+                  </div>
+                )}
               </div>
 
               {/* Tasting Notes */}
@@ -514,14 +701,14 @@ export function FlavorFinder() {
             <button
               type="button"
               onClick={resetFinder}
-              className="text-sm font-semibold text-[#5E554D] hover:text-[#1C1613] transition-colors"
+              className="text-sm font-semibold text-[#5E554D] hover:text-[#1C1613] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A6361F] rounded p-1"
             >
               ↺ Andere Antworten wählen
             </button>
 
             <Link
               href={`/kaffee/${matchedCoffee.coffee.slug}`}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-[#A6361F] px-8 py-4 text-base font-semibold text-white shadow-md hover:bg-[#d6573e] transition-all active:scale-98"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-[#A6361F] px-8 py-4 text-base font-semibold text-white shadow-md hover:bg-[#d6573e] transition-all active:scale-98 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A6361F]"
             >
               <span>{matchedCoffee.coffee.name} im Detail ansehen</span>
               <span aria-hidden="true">→</span>
