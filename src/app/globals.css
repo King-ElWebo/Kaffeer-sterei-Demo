@@ -1,136 +1,72 @@
 @import 'tailwindcss';
 
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
+@layer base {
+  :root {
+    --font-serif: var(--font-fraunces), Georgia, 'Times New Roman', serif;
+    --font-sans:
+      var(--font-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+      sans-serif;
+    --font-mono:
+      var(--font-mono), ui-monospace, 'Cascadia Code', Consolas, monospace;
+    --color-paper: #faf7f2;
+    --color-surface: #f3efe6;
+    --color-espresso: #1c1613;
+    --accent-terracotta: #a6361f;
+    --accent-terracotta-light: #e06d56;
+    --accent-amber: #b87514;
+    --accent-sage: #286357;
+    --accent-indigo: #3b4b70;
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    min-width: 320px;
+    scroll-behavior: smooth;
+    color-scheme: light;
+  }
+
+  body {
+    margin: 0;
+    background-color: #faf7f2;
+    color: #1c1613;
+    font-family: var(--font-sans);
+    line-height: 1.6;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-serif);
+    color: #1c1613;
+    text-wrap: balance;
+  }
 }
 
-html {
-  min-width: 320px;
-  scroll-behavior: smooth;
+.font-serif {
+  font-family: var(--font-serif);
 }
 
-body {
-  margin: 0;
-  background: Canvas;
-  color: CanvasText;
-  font-family:
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    sans-serif;
-  line-height: 1.5;
+.font-sans {
+  font-family: var(--font-sans);
 }
 
-a {
-  color: inherit;
+.font-mono {
+  font-family: var(--font-mono);
 }
 
 :focus-visible {
-  outline: 2px solid currentColor;
-  outline-offset: 4px;
-}
-
-.template-shell {
-  display: grid;
-  min-height: 100svh;
-  align-items: center;
-  padding: clamp(1.5rem, 5vw, 5rem);
-}
-
-.template-status {
-  width: min(100%, 72rem);
-  margin-inline: auto;
-  border-block: 1px solid color-mix(in srgb, CanvasText 24%, transparent);
-}
-
-.template-introduction,
-.template-configuration {
-  padding-block: clamp(2rem, 6vw, 5rem);
-}
-
-.template-introduction {
-  display: grid;
-  max-width: 54rem;
-  gap: 1.25rem;
-}
-
-.template-label,
-.template-summary,
-.template-configuration p {
-  margin: 0;
-}
-
-.template-label,
-code {
-  font-family:
-    ui-monospace, 'Cascadia Code', 'SFMono-Regular', Consolas, monospace;
-  font-size: 0.8125rem;
-}
-
-h1,
-h2 {
-  margin: 0;
-  font-weight: 600;
-  line-height: 1.05;
-  text-wrap: balance;
-}
-
-h1 {
-  font-size: clamp(2.5rem, 8vw, 6.5rem);
-  letter-spacing: -0.055em;
-}
-
-h2 {
-  font-size: clamp(1.5rem, 3vw, 2.5rem);
-  letter-spacing: -0.03em;
-}
-
-.template-summary {
-  max-width: 44rem;
-  font-size: clamp(1rem, 2vw, 1.25rem);
-}
-
-.template-link {
-  width: fit-content;
-  border-block-end: 1px solid currentColor;
-  padding-block: 0.25rem;
-  text-decoration: none;
-}
-
-.template-configuration {
-  display: grid;
-  gap: 2rem;
-  border-block-start: 1px solid color-mix(in srgb, CanvasText 24%, transparent);
-}
-
-.template-configuration ol {
-  display: grid;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.template-configuration li {
-  display: grid;
-  grid-template-columns: minmax(8rem, 0.35fr) 1fr;
-  gap: 1rem;
-  padding-block: 1rem;
-  border-block-start: 1px solid color-mix(in srgb, CanvasText 14%, transparent);
-}
-
-.template-configuration li:last-child {
-  border-block-end: 1px solid color-mix(in srgb, CanvasText 14%, transparent);
-}
-
-@media (max-width: 36rem) {
-  .template-configuration li {
-    grid-template-columns: 1fr;
-    gap: 0.35rem;
-  }
+  outline: 2px solid #a6361f;
+  outline-offset: 3px;
 }
 
 @media (prefers-reduced-motion: reduce) {

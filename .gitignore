@@ -16,6 +16,7 @@
 .DS_Store
 Thumbs.db
 *.swp
+/.vscode/
 
 # logs and TypeScript caches
 *.log

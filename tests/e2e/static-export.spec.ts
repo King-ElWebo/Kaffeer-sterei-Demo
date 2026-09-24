@@ -33,16 +33,18 @@ for (const route of siteRoutes) {
   });
 }
 
-test('the unconfigured template link works from the static export', async ({
+test('key showcase navigation and interactions work from the static export', async ({
   page,
 }) => {
   await page.goto('/');
-  const configure = page.getByRole('link', { name: 'Configure the project' });
-  test.skip(
-    (await configure.count()) === 0,
-    'Configured projects replace this test with their key interactions.',
+  await page.getByRole('link', { name: 'Bohnen entdecken' }).click();
+  await expect(page).toHaveURL(/\/kaffee\/?$/);
+  await expect(page.locator('main')).toBeVisible();
+
+  // Test coffee product navigation from catalog
+  await page.getByRole('link', { name: 'Wiener Samt', exact: true }).click();
+  await expect(page).toHaveURL(/\/kaffee\/wiener-samt\/?$/);
+  await expect(page.getByRole('heading', { level: 1 })).toContainText(
+    'Wiener Samt',
   );
-  await configure.click();
-  await expect(page).toHaveURL(/#configuration$/);
-  await expect(page.locator('#configuration')).toBeInViewport();
 });
