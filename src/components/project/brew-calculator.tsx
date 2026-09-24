@@ -173,14 +173,14 @@ export function BrewCalculator() {
           </div>
 
           <div>
-            <div className="flex justify-between items-baseline mb-2">
+            <div className="flex justify-between items-baseline gap-3 mb-2">
               <label
                 htmlFor={`${inputId}-volume-slider`}
                 className="text-xs uppercase tracking-widest font-mono text-[var(--color-espresso)]/70 font-semibold"
               >
                 2. Gewünschte Kaffeemenge (Brühwasser)
               </label>
-              <span className="font-mono font-bold text-lg text-[var(--accent-terracotta)]">
+              <span className="font-mono font-bold text-lg text-[var(--accent-terracotta)] whitespace-nowrap shrink-0">
                 {volumeMl} ml
               </span>
             </div>
@@ -217,16 +217,16 @@ export function BrewCalculator() {
             <span className="block text-xs uppercase tracking-widest font-mono text-[#5E554D] font-semibold mb-2">
               Schnellauswahl
             </span>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2.5">
               {presets.map((preset) => (
                 <button
                   key={preset.label}
                   type="button"
                   onClick={() => setVolumeMl(preset.ml)}
-                  className={`px-3 py-1.5 rounded-md text-xs font-mono transition-colors cursor-pointer border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-terracotta)] ${
+                  className={`min-h-[44px] px-3.5 py-2.5 rounded-lg text-xs font-mono font-medium transition-colors cursor-pointer border inline-flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-terracotta)] ${
                     volumeMl === preset.ml
-                      ? 'bg-[var(--accent-terracotta)] text-white border-[var(--accent-terracotta)]'
-                      : 'bg-[var(--color-surface)] text-[var(--color-espresso)]/80 border-[var(--color-espresso)]/15 hover:border-[var(--color-espresso)]/40 hover:bg-white'
+                      ? 'bg-[var(--accent-terracotta)] text-white border-[var(--accent-terracotta)] shadow-sm'
+                      : 'bg-[var(--color-surface)] text-[var(--color-espresso)]/85 border-[var(--color-espresso)]/15 hover:border-[var(--color-espresso)]/40 hover:bg-white'
                   }`}
                 >
                   {preset.label}

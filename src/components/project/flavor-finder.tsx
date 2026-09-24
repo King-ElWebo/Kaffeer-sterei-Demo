@@ -126,51 +126,61 @@ export function FlavorFinder() {
     coffee: CoffeeProduct;
     badge: string;
     reason: string;
-    tradeOff?: string;
+    tradeOffs?: string[];
   } = (() => {
     // 1. Decaf priority
     if (flavor === 'decaf') {
       const coffee = coffeeProducts.find((p) => p.slug === 'nachtfalter')!;
-      let tradeOff: string | undefined;
+      const tradeOffs: string[] = [];
       if (roast === 'light') {
-        tradeOff =
-          'Hinweis zum Röstgrad: Obwohl du helle Röstungen bevorzugst, rösten wir den Nachtfalter als ausgewogenes Medium. Das stabilisiert den Körper der naturbelassen entkoffeinierten Bohne und verhindert unangenehm adstringierende Säurespitzen.';
-      } else if (method === 'espresso') {
-        tradeOff =
-          'Zubereitungstipp: Durch den mittleren Röstgrad und die feine Kakaobasis erzeugt der Nachtfalter im Siebträger eine dichte, haselnussbraune Crema – perfekt als abendlicher Espresso.';
+        tradeOffs.push(
+          'Hinweis zum Röstgrad: Obwohl du helle Röstungen bevorzugst, rösten wir den Nachtfalter als ausgewogenes Medium. Das stabilisiert den Körper der naturbelassen entkoffeinierten Bohne und verhindert unangenehm adstringierende Säurespitzen.',
+        );
+      }
+      if (method === 'espresso') {
+        tradeOffs.push(
+          'Zubereitungstipp: Durch den mittleren Röstgrad und die feine Kakaobasis erzeugt der Nachtfalter im Siebträger eine dichte, haselnussbraune Crema – perfekt als abendlicher Espresso.',
+        );
       } else if (method === 'filter') {
-        tradeOff =
-          'Zubereitungstipp: Im Handfilter entfaltet der Nachtfalter eine bemerkenswert saubere Feigensüße mit milder, weicher Säure.';
+        tradeOffs.push(
+          'Zubereitungstipp: Im Handfilter entfaltet der Nachtfalter eine bemerkenswert saubere Feigensüße mit milder, weicher Säure.',
+        );
       }
       return {
         coffee,
         badge: 'Koffeinfreie Spezialität',
         reason:
           'Du suchst aromatische Tiefe ohne Koffein-Aufregung. Unser „Nachtfalter“ beweist, dass Specialty Coffee und Entkoffeinierung perfekt zusammenpassen. Durch das sanfte, rein biologische Zuckerrohr-Verfahren bleiben feine Noten von Feige und herbem Kakao vollständig erhalten.',
-        tradeOff,
+        tradeOffs,
       };
     }
 
     // 2. Light roast or Fruit/Floral flavor preference
     if (flavor === 'fruit' || roast === 'light') {
       const coffee = coffeeProducts.find((p) => p.slug === 'flora-neubau')!;
-      let tradeOff: string | undefined;
+      const tradeOffs: string[] = [];
+      // Method-related guidance (independent)
       if (method === 'espresso') {
-        tradeOff =
-          'Sensorischer Hinweis zu Espresso: Helle äthiopische Röstungen ergeben im Siebträger einen modernen, lebendigen Frucht-Espresso („Modern Espresso“) mit ausgeprägter Zitrussäure. Wir empfehlen eine feine Mahlung, ca. 94 °C Brühtemperatur und eine Extraktionszeit von 28–30 Sekunden.';
-      } else if (flavor === 'chocolate') {
-        tradeOff =
-          'Sensorischer Kompromiss: Du hast Schokolade gewählt, aber eine helle Röstung präferiert. Bei Flora Neubau stehen Bergamotte und Pfirsich im Vordergrund; Kakaonoten treten hier nur sehr dezent im Nachklang auf.';
+        tradeOffs.push(
+          'Sensorischer Hinweis zu Espresso: Helle äthiopische Röstungen ergeben im Siebträger einen modernen, lebendigen Frucht-Espresso („Modern Espresso“) mit ausgeprägter Zitrussäure. Wir empfehlen eine feine Mahlung, ca. 94 °C Brühtemperatur und eine Extraktionszeit von 28–30 Sekunden.',
+        );
       } else if (method === 'french-press') {
-        tradeOff =
-          'Zubereitungstipp: In der French Press empfehlen wir ein etwas gröberes Mahlgut und 4 Minuten Ziehzeit, um die Klarheit der floralen Aromen trotz ungefilterter Öle bestmöglich herauszuarbeiten.';
+        tradeOffs.push(
+          'Zubereitungstipp: In der French Press empfehlen wir ein etwas gröberes Mahlgut und 4 Minuten Ziehzeit, um die Klarheit der floralen Aromen trotz ungefilterter Öle bestmöglich herauszuarbeiten.',
+        );
+      }
+      // Flavor-related conflict (independent)
+      if (flavor === 'chocolate') {
+        tradeOffs.push(
+          'Sensorischer Kompromiss: Du hast Schokolade gewählt, aber eine helle Röstung präferiert. Bei Flora Neubau stehen Bergamotte und Pfirsich im Vordergrund; Kakaonoten treten hier nur sehr dezent im Nachklang auf.',
+        );
       }
       return {
         coffee,
         badge: 'Florale Frische & Helle Röstung',
         reason:
           'Für deine Vorliebe für helle Röstungen und fruchtig-florale Eleganz ist „Flora Neubau“ ideal. Die sortenreinen äthiopischen Hochlandbohnen aus Yirgacheffe begeistern im Aufguss mit lebendigen Bergamottenoten, weißem Pfirsich und feinem Jasminduft.',
-        tradeOff,
+        tradeOffs,
       };
     }
 
@@ -181,32 +191,34 @@ export function FlavorFinder() {
       roast === 'medium-dark'
     ) {
       const coffee = coffeeProducts.find((p) => p.slug === 'wiener-samt')!;
-      let tradeOff: string | undefined;
+      const tradeOffs: string[] = [];
       if (method === 'filter') {
-        tradeOff =
-          'Sensorischer Hinweis zum Handfilter: Du brühst bevorzugt im Filter. Wiener Samt liefert hier eine wunderbar säurearme, samtige Tasse mit vollem Schokoladenkörper – ideal, wenn du fruchtbetonte Säuren meiden möchtest.';
-      } else if (flavor === 'balance') {
-        tradeOff =
-          'Sensorische Einordnung: Du hast ein ausgewogenes Geschmackserlebnis gewünscht. Wiener Samt liefert dafür eine sehr verlässliche, harmonische Basis mit Fokus auf Schokolade, geröstete Mandel und minimale Fruchtsäure.';
+        tradeOffs.push(
+          'Sensorischer Hinweis zum Handfilter: Du brühst bevorzugt im Filter. Wiener Samt liefert hier eine wunderbar säurearme, samtige Tasse mit vollem Schokoladenkörper – ideal, wenn du fruchtbetonte Säuren meiden möchtest.',
+        );
+      }
+      if (flavor === 'balance') {
+        tradeOffs.push(
+          'Sensorische Einordnung: Du hast ein ausgewogenes Geschmackserlebnis gewünscht. Wiener Samt liefert dafür eine sehr verlässliche, harmonische Basis mit Fokus auf Schokolade, geröstete Mandel und minimale Fruchtsäure.',
+        );
       }
       return {
         coffee,
         badge: 'Samtiger Körper & Schokolade',
         reason:
           'Deine Vorliebe für warme Kakaonoten, dichte Textur und schonende Röstung führt direkt zu „Wiener Samt“. Unser mitteldunkler Signature-Roast baut Fruchtsäuren harmonisch ab und maximiert Noten von Zartbitterschokolade und gebrannter Mandel.',
-        tradeOff,
+        tradeOffs,
       };
     }
 
-    // 4. Balanced Allrounder default
+    // 4. Balanced Allrounder default (Filter/French-Press/Allround + Balance + Medium Roast)
     const coffee = coffeeProducts.find((p) => p.slug === 'donau-klarheit')!;
     return {
       coffee,
       badge: 'Ausgewogene Harmonie & Süße',
       reason:
         'Du schätzt eine harmonische Mitte aus Süße, mildem Fruchtansatz und vertrautem Nussaroma ohne extreme Säurespitzen. „Donau Klarheit“ balanciert roten Apfel, Waldhonig und Haselnuss perfekt aus.',
-      tradeOff:
-        'Universalität: Ob Handfilter, French Press oder Vollautomat – dieser kolumbianische Single Origin extrahiert extrem fehlertolerant und schmeckt zu jeder Tageszeit.',
+      tradeOffs: [],
     };
   })();
 
@@ -655,14 +667,17 @@ export function FlavorFinder() {
                   </p>
                 </div>
 
-                {matchedCoffee.tradeOff && (
-                  <div className="rounded-xl bg-[#FAF7F2] p-4 border border-[#E2DDD4]/80 text-xs sm:text-sm text-[#5E554D] leading-relaxed">
-                    <strong className="block font-semibold text-[#1C1613] mb-1">
-                      Sensorische Einordnung deiner Auswahl:
-                    </strong>
-                    {matchedCoffee.tradeOff}
-                  </div>
-                )}
+                {matchedCoffee.tradeOffs &&
+                  matchedCoffee.tradeOffs.length > 0 && (
+                    <div className="rounded-xl bg-[#FAF7F2] p-4 border border-[#E2DDD4]/80 text-xs sm:text-sm text-[#5E554D] leading-relaxed space-y-2">
+                      <strong className="block font-semibold text-[#1C1613]">
+                        Sensorische Einordnung deiner Auswahl:
+                      </strong>
+                      {matchedCoffee.tradeOffs.map((note, idx) => (
+                        <p key={idx}>{note}</p>
+                      ))}
+                    </div>
+                  )}
               </div>
 
               {/* Tasting Notes */}

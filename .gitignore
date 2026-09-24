@@ -27,6 +27,7 @@ Thumbs.db
 /artifacts/qa/test-results/
 /artifacts/qa/static-test-results/
 /artifacts/qa/screenshots/
+/artifacts/qa/final-team-review/screenshots/
 /playwright/.cache/
 
 # Playwright local state

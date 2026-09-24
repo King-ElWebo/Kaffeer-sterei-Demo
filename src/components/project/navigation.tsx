@@ -225,12 +225,12 @@ export function Navigation() {
             className="md:hidden fixed inset-x-0 top-20 bottom-0 z-50 flex flex-col bg-[#FAF7F2] border-t border-[#E2DDD4] px-6 py-6 overflow-y-auto"
           >
             {/* Close action row */}
-            <div className="flex justify-end pb-3 mb-2 border-b border-[#E2DDD4]/60">
+            <div className="shrink-0 flex justify-end pb-3 mb-2 border-b border-[#E2DDD4]/60">
               <button
                 ref={closeButtonRef}
                 type="button"
                 onClick={handleCloseMenu}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono font-medium rounded-lg border border-[#E2DDD4] text-[#5E554D] hover:text-[#1C1613] hover:bg-[#F3EFE6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A6361F]"
+                className="inline-flex items-center justify-center gap-1.5 min-h-[44px] min-w-[44px] px-3.5 py-2.5 text-xs font-mono font-medium rounded-lg border border-[#E2DDD4] text-[#5E554D] hover:text-[#1C1613] hover:bg-[#F3EFE6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A6361F] cursor-pointer"
                 aria-label="Menü schließen"
               >
                 <span>Schließen</span>
@@ -252,7 +252,7 @@ export function Navigation() {
             </div>
 
             <nav
-              className="flex flex-col gap-2.5"
+              className="shrink-0 flex flex-col gap-2.5"
               aria-label="Mobile Navigation Links"
             >
               {NAV_LINKS.map((link) => {
@@ -281,7 +281,7 @@ export function Navigation() {
               })}
             </nav>
 
-            <div className="mt-auto pt-6 border-t border-[#E2DDD4]/80 flex flex-col gap-4">
+            <div className="mt-auto pt-6 shrink-0 border-t border-[#E2DDD4]/80 flex flex-col gap-4">
               <Link
                 href="/geschmack"
                 onClick={() => setMobileMenuOpen(false)}
